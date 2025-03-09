@@ -11,9 +11,9 @@ import java.util.Arrays;
  */
 public class UTF8Converter {
 
-    // big if else. but i could not be bothered
+    // big if else. but I could not be bothered
     public static byte[] codePointToUTF(int x) {
-        byte[] b = null;
+        byte[] b;
 
         String binaryString = intToBinaryString(x);
 
@@ -72,8 +72,52 @@ public class UTF8Converter {
 
     public static int UTFtoCodePoint(byte[] bytes) {
         if (isValidUTF8(bytes)) {
-            // TODO replace return statement below by code to return the code point
-            // UTF-8 encoded in array bytes. bytes[0] contains the first byte
+            int countBytes = bytes.length;
+            int result = 0;
+
+            if (countBytes == 1) {
+                System.out.println("1 bytes");
+                String mainBinaryString = intToBinaryString(bytes[0]);
+                //intToBinaryString does not give leading "0" chars.
+                // so we do not need to trim it
+                return binaryStringToInt(mainBinaryString);
+
+            } else if (countBytes == 2) {
+                System.out.println("2 bytes");
+                String mainBinaryString = intToBinaryString(bytes[0]);
+                String followUp1 = intToBinaryString(bytes[1]);
+
+                mainBinaryString = mainBinaryString.replaceFirst("110", "");
+                followUp1 = followUp1.replaceFirst("10", "");
+
+                return binaryStringToInt(mainBinaryString + followUp1);
+
+            } else if (countBytes == 3) {
+                System.out.println("3 bytes");
+                String mainBinaryString = intToBinaryString(bytes[0]);
+                String followUp1 = intToBinaryString(bytes[1]);
+                String followUp2 = intToBinaryString(bytes[2]);
+
+                mainBinaryString = mainBinaryString.replaceFirst("1110", "");
+                followUp1 = followUp1.replaceFirst("10", "");
+                followUp2 = followUp2.replaceFirst("10", "");
+
+                return binaryStringToInt(mainBinaryString + followUp1 + followUp2);
+            } else if (countBytes == 4) {
+                System.out.println("4 bytes");
+
+                String mainBinaryString = intToBinaryString(bytes[0]);
+                String followUp1 = intToBinaryString(bytes[1]);
+                String followUp2 = intToBinaryString(bytes[2]);
+                String followUp3 = intToBinaryString(bytes[3]);
+
+                mainBinaryString = mainBinaryString.replaceFirst("11110", "");
+                followUp1 = followUp1.replaceFirst("10", "");
+                followUp2 = followUp2.replaceFirst("10", "");
+                followUp3 = followUp3.replaceFirst("10", "");
+
+                return binaryStringToInt(mainBinaryString + followUp1 + followUp2 + followUp3);
+            }
 
             return 0;
         } else {
@@ -83,12 +127,11 @@ public class UTF8Converter {
 
     private static boolean isValidUTF8(byte[] bytes) {
         if (bytes.length == 1) return (bytes[0] & 0b1000_0000) == 0;
-        else if (bytes.length == 2) return ((bytes[0] & 0b1110_0000) == 0b1100_0000)
-                && isFollowup(bytes[1]);
-        else if (bytes.length == 3) return ((bytes[0] & 0b1111_0000) == 0b1110_0000)
-                && isFollowup(bytes[1]) && isFollowup(bytes[2]);
-        else if (bytes.length == 4) return ((bytes[0] & 0b1111_1000) == 0b1111_0000)
-                && isFollowup(bytes[1]) && isFollowup(bytes[2]) && isFollowup(bytes[3]);
+        else if (bytes.length == 2) return ((bytes[0] & 0b1110_0000) == 0b1100_0000) && isFollowup(bytes[1]);
+        else if (bytes.length == 3)
+            return ((bytes[0] & 0b1111_0000) == 0b1110_0000) && isFollowup(bytes[1]) && isFollowup(bytes[2]);
+        else if (bytes.length == 4)
+            return ((bytes[0] & 0b1111_1000) == 0b1111_0000) && isFollowup(bytes[1]) && isFollowup(bytes[2]) && isFollowup(bytes[3]);
         else return false;
     }
 
@@ -107,6 +150,10 @@ public class UTF8Converter {
 
     private static String intToBinaryString(int x) {
         String s = "";
+
+        if (x < 0) {
+            x = (1 << 8) - (~(x) + 1);
+        }
 
         while (x > 0) {
             if (x % 2 == 1) {
