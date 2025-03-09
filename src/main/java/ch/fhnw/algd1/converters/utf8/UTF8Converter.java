@@ -1,14 +1,5 @@
 package ch.fhnw.algd1.converters.utf8;
 
-/*
- * Created on 05.09.2014
- */
-
-import java.util.Arrays;
-
-/**
- * @author
- */
 public class UTF8Converter {
 
     // big if else. but I could not be bothered
@@ -17,11 +8,11 @@ public class UTF8Converter {
 
         String binaryString = intToBinaryString(x);
 
-        if (binaryString.length() <= 7) {
+        if (x <= 1 << 7) {
             b = new byte[1];
-            b[0] = (byte) binaryStringToInt(binaryString);
+            b[0] = (byte) x;
 
-        } else if (binaryString.length() <= 11) {
+        } else if (x <= 1 << 11) {
             b = new byte[2];
 
             String followUp = binaryString.substring(binaryString.length() - 6);
@@ -33,7 +24,7 @@ public class UTF8Converter {
             main = "110" + "0".repeat(padding) + main;
             b[0] = (byte) binaryStringToInt(main);
 
-        } else if (binaryString.length() <= 16) {
+        } else if (x <= 1 << 16) {
             b = new byte[3];
 
             String followUpPart = binaryString.substring(binaryString.length() - 12);
@@ -45,7 +36,7 @@ public class UTF8Converter {
             main = "1110" + "0".repeat(padding) + main;
             b[0] = (byte) binaryStringToInt(main);
 
-        } else if (binaryString.length() <= 21) {
+        } else if (x <= 1 << 21) {
             b = new byte[4];
 
             if (binaryString.length() == 17) {
@@ -77,46 +68,44 @@ public class UTF8Converter {
 
             if (countBytes == 1) {
                 System.out.println("1 bytes");
-                String mainBinaryString = intToBinaryString(bytes[0]);
-                //intToBinaryString does not give leading "0" chars.
-                // so we do not need to trim it
-                return binaryStringToInt(mainBinaryString);
+                return bytes[0];
 
             } else if (countBytes == 2) {
                 System.out.println("2 bytes");
-                String mainBinaryString = intToBinaryString(bytes[0]);
-                String followUp1 = intToBinaryString(bytes[1]);
 
-                mainBinaryString = mainBinaryString.replaceFirst("110", "");
-                followUp1 = followUp1.replaceFirst("10", "");
+                int main = bytes[0] ^ (-64);
+                main = main << 6;
 
-                return binaryStringToInt(mainBinaryString + followUp1);
+                int followUp1 = bytes[1] ^ (-128);
+
+                return main + followUp1;
 
             } else if (countBytes == 3) {
                 System.out.println("3 bytes");
-                String mainBinaryString = intToBinaryString(bytes[0]);
-                String followUp1 = intToBinaryString(bytes[1]);
-                String followUp2 = intToBinaryString(bytes[2]);
 
-                mainBinaryString = mainBinaryString.replaceFirst("1110", "");
-                followUp1 = followUp1.replaceFirst("10", "");
-                followUp2 = followUp2.replaceFirst("10", "");
+                int main = bytes[0] ^ -32;
+                main = main << 12;
+                int followUp1 = bytes[1] ^ -128;
+                followUp1 = followUp1 << 6;
 
-                return binaryStringToInt(mainBinaryString + followUp1 + followUp2);
+                int followUp2 = bytes[2] ^ -128;
+
+                return main + followUp1 + followUp2;
             } else if (countBytes == 4) {
                 System.out.println("4 bytes");
 
-                String mainBinaryString = intToBinaryString(bytes[0]);
-                String followUp1 = intToBinaryString(bytes[1]);
-                String followUp2 = intToBinaryString(bytes[2]);
-                String followUp3 = intToBinaryString(bytes[3]);
+                int main = bytes[0] ^ -16;
+                main = main << 18;
 
-                mainBinaryString = mainBinaryString.replaceFirst("11110", "");
-                followUp1 = followUp1.replaceFirst("10", "");
-                followUp2 = followUp2.replaceFirst("10", "");
-                followUp3 = followUp3.replaceFirst("10", "");
+                int followUp1 = bytes[1] ^ -128;
+                followUp1 = followUp1 << 12;
 
-                return binaryStringToInt(mainBinaryString + followUp1 + followUp2 + followUp3);
+                int followUp2 = bytes[2] ^ -128;
+                followUp2 = followUp2 << 6;
+
+                int followUp3 = bytes[3] ^ -128;
+
+                return main + followUp1 + followUp2 + followUp3;
             }
 
             return 0;
